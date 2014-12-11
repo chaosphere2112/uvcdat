@@ -1,5 +1,6 @@
 set(wget_source "${CMAKE_CURRENT_BINARY_DIR}/build/wget")
 set(wget_install "${cdat_EXTERNALS}")
+set(wget_config_args "--with-ssl=openssl")
 
 ExternalProject_Add(Wget
   DOWNLOAD_DIR ${CDAT_PACKAGE_CACHE_DIR}
@@ -9,7 +10,7 @@ ExternalProject_Add(Wget
   URL_MD5 ${WGET_MD5}
   BUILD_IN_SOURCE 1
   PATCH_COMMAND ""
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -DINSTALL_DIR=<INSTALL_DIR> -DWORKING_DIR=<SOURCE_DIR> -P ${cdat_CMAKE_BINARY_DIR}/cdat_configure_step.cmake
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -DCONFIGURE_ARGS=${wget_config_args} -DINSTALL_DIR=<INSTALL_DIR> -DWORKING_DIR=<SOURCE_DIR> -P ${cdat_CMAKE_BINARY_DIR}/cdat_configure_step.cmake
   DEPENDS ${wget_deps}
   ${ep_log_options}
 )

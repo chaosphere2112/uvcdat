@@ -3,9 +3,14 @@
 
 import sys
 
-fnm = sys.prefix+"/Resources/Python.app/Contents/Info.plist"
+try:
+	fnm = sys.prefix+"/Resources/Python.app/Contents/Info.plist"
+	f=open(fnm)
+except IOError:
+	# Yosemite eliminates the Python.app/Contents parts of the path
+	fnm = sys.prefix + "/Resources/Info.plist"
+	f=open(fnm)
 
-f=open(fnm)
 s=f.read()
 pat="<key>CFBundleName</key>"
 i=s.find(pat)#<string>Python</string>")
