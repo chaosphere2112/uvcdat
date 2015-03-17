@@ -122,8 +122,9 @@ class VTKAnimate(animate_helper.AnimationController):
             return
 
         self.last_size = new_size
+        self.create_thread.canvas.bgX, self.create_thread.canvas.bgY = new_size
         self.create_thread.canvas.backend.renWin.SetSize(new_size)
-        self.create_thread.canvas.backend.configureEvent(self.create_thread.canvas, "ModifiedEvent")
+        self.create_thread.canvas.backend.configureEvent(self.create_thread.canvas.backend.renWin, "ModifiedEvent")
 
         if self.renderers is None or len(self.renderers) > 0:
             # If we're displaying a PNG, we'll skip the configureEvent action on vcs_self's backend so it doesn't break anything
@@ -171,7 +172,7 @@ class VTKAnimate(animate_helper.AnimationController):
 
         be.hideGUI()
 
-        self.plot_to_canvas(self.create_thread.canvas, self.vcs_self.display_names, bg=1)
+        self.plot_to_canvas(self.create_thread.canvas, self.vcs_self.display_names, bg=True)
 
         renderers = be.renWin.GetRenderers()
         renderers.InitTraversal()
