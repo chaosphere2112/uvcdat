@@ -40,6 +40,7 @@ class VTKAnimationCreate(animate_helper.StoppableThread):
     # Animation resizing is broken right now; this will give us some buffer space to work with.
     self.canvas.bgX *= 2
     self.canvas.bgY *= 2
+    self.drawing = None
     self.controller.animation_created = True
     import atexit
     atexit.register(self.close)
@@ -70,10 +71,19 @@ class VTKAnimationCreate(animate_helper.StoppableThread):
     """
     Draw the specified frame on the offscreen canvas, render to png_name, add to controller's animation_files
     """
+    # Prevent multiple draws at once
+    while self.drawing is not None:
+      pass
+
+    if os.path.exists(png_name):
+      # If we just finished rendering the png we want, we'll just return.
+      return
+
+    self.drawing = frame_num
     update_input(self.canvas, self.controller._number_of_dims_used_for_plot, frame_num, update=False)
 
     self.canvas.png(png_name)
-
+    self.drawing = None
 
   def describe(self):
     for info in self.controller.animate_info:

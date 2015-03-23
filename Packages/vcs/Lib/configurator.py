@@ -161,8 +161,8 @@ class Configurator(object):
         self.initialized = False
         self.animation_speed = 5
         self.animation_timer = None
+        self.anim_create_timer = None
         self.save_timer = None
-        self.save_listener = None
         self.save_anim_button = None
         self.listeners = []
         self.animation_last_frame_time = datetime.datetime.now()
@@ -200,7 +200,7 @@ class Configurator(object):
     def update(self):
         if self.backend.renWin and self.interactor is None:
             self.interactor = self.backend.renWin.GetInteractor()
-            self.listeners.append(self.interactor.AddObserver("TimerEvent", self.animate))
+            self.listeners.append(self.interactor.AddObserver("TimerEvent", self.timer_event))
             self.listeners.append(self.interactor.AddObserver("LeftButtonPressEvent", self.click))
             self.listeners.append(self.interactor.AddObserver("MouseMoveEvent", self.hover))
             self.listeners.append(self.interactor.AddObserver("LeftButtonReleaseEvent", self.release))
@@ -555,17 +555,30 @@ class Configurator(object):
     def step_back(self, state):
         self.canvas.animate.draw_frame((self.canvas.animate.frame_num - 1) % self.canvas.animate.number_of_frames(), allow_static = False, render_offscreen = False)
 
+    def timer_event(self, obj, ev):
+        if self.save_timer is not None:
+            self.save_tick(obj, ev)
+        if self.anim_create_timer is not None:
+            frame = len(self.canvas.animate.animation_files) % self.canvas.animate.number_of_frames()
+            print "Create", frame
+            self.canvas.animate.create_thread.get_frame(frame)
+            if len(self.canvas.animate.animation_files) < self.canvas.animate.number_of_frames():
+                self.anim_create_timer = self.interactor.CreateOneShotTimer(25)
+            else:
+                self.anim_create_timer = None
+        if self.animation_timer is not None and datetime.datetime.now() - self.animation_last_frame_time > datetime.timedelta(0, 0, 0, int(.9 * 1000. / self.animation_speed)):
+            self.animate(obj, ev)
+            if self.anim_create_timer is None and len(self.canvas.animate.animation_files) < self.canvas.animate.number_of_frames():
+                self.anim_create_timer = self.interactor.CreateOneShotTimer(25)
+
+
     def save_animation_press(self, state):
         if state == 1:
-            self.save_listener = self.interactor.AddObserver("TimerEvent", self.save_tick)
             self.save_timer = self.interactor.CreateRepeatingTimer(10)
         else:
             if self.save_timer:
                 self.interactor.DestroyTimer(self.save_timer)
                 self.save_timer = None
-            if self.save_listener:
-                self.interactor.RemoveObserver(self.save_listener)
-                self.save_listener = None
             self.canvas.animate.draw_frame(allow_static=False, render_offscreen=False)
 
 
@@ -597,7 +610,7 @@ class Configurator(object):
 
 
     def save_tick(self, obj, event):
-        if self.save_timer is None or self.save_listener is None:
+        if self.save_timer is None:
             return
 
         if self.canvas.animate.number_of_frames() == len(self.canvas.animate.animation_files):
@@ -605,9 +618,6 @@ class Configurator(object):
             if self.save_timer:
                 self.interactor.DestroyTimer(self.save_timer)
                 self.save_timer = None
-            if self.save_listener:
-                self.interactor.RemoveObserver(self.save_listener)
-                self.save_listener = None
         else:
             self.canvas.animate.draw_frame((self.canvas.animate.frame_num + 1) % self.canvas.animate.number_of_frames())
 
@@ -621,13 +631,13 @@ class Configurator(object):
         return v
 
     def animate(self, obj, event):
-        if self.animation_timer is not None and datetime.datetime.now() - self.animation_last_frame_time > datetime.timedelta(0, 0, 0, int(.9 * 1000. / self.animation_speed)):
-            self.animation_last_frame_time = datetime.datetime.now()
-            self.canvas.animate.draw_frame((self.canvas.animate.frame_num + 1) % self.canvas.animate.number_of_frames())
+        self.animation_last_frame_time = datetime.datetime.now()
+        self.canvas.animate.draw_frame((self.canvas.animate.frame_num + 1) % self.canvas.animate.number_of_frames())
 
     def start_animating(self):
         if self.animation_timer is None:
             self.animation_timer = self.interactor.CreateRepeatingTimer(int(1000.0 / self.animation_speed))
+
 
     def stop_animating(self):
         if self.animation_timer is not None:
