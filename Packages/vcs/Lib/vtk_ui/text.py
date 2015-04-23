@@ -184,10 +184,10 @@ def baseline_offsets(origin, new_string, text_prop):
     return below_offset, above_offset
 
 from widget import Widget, WidgetReprShim
-from behaviors import DraggableMixin
+from behaviors import DraggableMixin, ClickableMixin
 
 
-class Label(Widget, DraggableMixin):
+class Label(Widget, DraggableMixin, ClickableMixin):
 
     def __init__(self, interactor, string, movable=False, on_move=None, on_drag=None, on_click=None, on_release=None, fgcolor=(1,1,1), size=24, font="Arial", left=0, top=0, textproperty=None):
 
@@ -257,7 +257,16 @@ class Label(Widget, DraggableMixin):
         doc = "The left property."
 
         def fget(self):
-            return self.x
+            halign = self.actor.GetTextProperty().GetJustificationAsString()
+            if halign == "Left":
+                return self.x
+
+            w, h = self.get_dimensions()
+            if halign == "Centered":
+                return self.x - w / 2.
+
+            if halign == "Right":
+                return self.x - w
 
         def fset(self, l):
             halign = self.actor.GetTextProperty().GetJustificationAsString()
@@ -281,7 +290,16 @@ class Label(Widget, DraggableMixin):
 
         def fget(self):
             w, h = self.interactor.GetRenderWindow().GetSize()
-            return h - self.y
+            y = h - self.y
+
+            w, h = text_dimensions(self.text, self.actor.GetTextProperty())
+            valign = self.actor.GetTextProperty().GetVerticalJustificationAsString()
+            if valign == "Top":
+                return y
+            if valign == "Centered":
+                return y + h / 2.
+            if valign == "Bottom":
+                return y + h
 
         def fset(self, t):
             """
@@ -382,6 +400,10 @@ class Label(Widget, DraggableMixin):
         self.manager.remove_widget(self)
         self.repr.GetRenderer().RemoveActor(self.actor)
         self.interactor = None
+
+    def click_release(self):
+        if self.on_click:
+            self.on_click(self.get_event_poisition())
 
     def drag_move(self, dx, dy):
         if self.movable:
