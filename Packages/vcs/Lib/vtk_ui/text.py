@@ -165,7 +165,7 @@ def text_dimensions(text, text_prop, at_angle=0):
     bounds = [0, 0, 0, 0]
     p = vtkTextProperty()
     p.ShallowCopy(text_prop)
-    p.SetOrientation(0)
+    p.SetOrientation(at_angle)
     ren.GetBoundingBox(p, text, bounds)
     return bounds[1] - bounds[0], bounds[3] - bounds[2]
 
@@ -189,7 +189,7 @@ from behaviors import DraggableMixin, ClickableMixin
 
 class Label(Widget, DraggableMixin, ClickableMixin):
 
-    def __init__(self, interactor, string, movable=False, on_move=None, on_drag=None, on_click=None, on_release=None, fgcolor=(1,1,1), size=24, font="Arial", left=0, top=0, textproperty=None):
+    def __init__(self, interactor, string, movable=False, on_move=None, on_drag=None, on_click=None, on_release=None, fgcolor=(1, 1, 1), size=24, font="Arial", left=0, top=0, textproperty=None):
 
         if textproperty is not None:
             self.actor = vtkTextActor()
@@ -261,7 +261,7 @@ class Label(Widget, DraggableMixin, ClickableMixin):
             if halign == "Left":
                 return self.x
 
-            w, h = self.get_dimensions()
+            w, h = text_dimensions(self.text, self.actor.GetTextProperty())
             if halign == "Centered":
                 return self.x - w / 2.
 
@@ -273,7 +273,7 @@ class Label(Widget, DraggableMixin, ClickableMixin):
             if halign == "Left":
                 self.x = l
 
-            w, h = self.get_dimensions()
+            w, h = text_dimensions(self.text, self.actor.GetTextProperty())
             if halign == "Centered":
                 self.x = l + w / 2.
 
@@ -312,15 +312,14 @@ class Label(Widget, DraggableMixin, ClickableMixin):
             """
             # Get the text's size to adjust for alignment
             w, h = text_dimensions(self.text, self.actor.GetTextProperty())
+
             valign = self.actor.GetTextProperty().GetVerticalJustificationAsString()
             # Adjust position based on alignment
             if valign == "Top":
                 y = t
             # Since it's not top-aligned, alignment point will be lower (and we're in units from top)
             elif valign == "Centered":
-                print "Centered"
-                #y = t + h / 2.
-                y = t + h
+                y = t + h / 2.
             elif valign == "Bottom":
                 y = t + h
             # Convert the y from pixels from top to pixels from bottom
