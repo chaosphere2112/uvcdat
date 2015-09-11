@@ -240,7 +240,8 @@ class VTKVCSBackend(object):
             parg.append(d.g_type)
             parg.append(d.g_name)
             plots_args.append(parg)
-            kwarg = {}
+
+            kwarg = {"display_name": dnm}
             if d.ratio is not None:
                 kwarg["ratio"] = d.ratio
 
@@ -256,7 +257,7 @@ class VTKVCSBackend(object):
             restart_anim = self.canvas.configurator.animation_timer is not None
         else:
             restart_anim = False
-        self.canvas.clear(render=False)
+        self.canvas.clear(render=False, preserve_display=True)
 
         for i, pargs in enumerate(plots_args):
             self.canvas.plot(*pargs, render=False, **key_args[i])

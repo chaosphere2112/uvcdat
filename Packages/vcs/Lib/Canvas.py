@@ -2269,7 +2269,7 @@ Options:::
                        'xbounds', 'ybounds', 'xname', 'yname', 'xunits', 'yunits', 'xweights', 'yweights',
                        'comment1', 'comment2', 'comment3', 'comment4', 'hms', 'long_name', 'zaxis',
                        'zarray', 'zname', 'zunits', 'taxis', 'tarray', 'tname', 'tunits', 'waxis', 'warray',
-                       'wname', 'wunits', 'bg', 'ratio', 'donotstoredisplay', 'render', 'continents_line']
+                       'wname', 'wunits', 'bg', 'ratio', 'donotstoredisplay', 'render', 'continents_line', "display_name"]
 
     # def replot(self):
     #    """ Clears and plots with last used plot arguments
@@ -3488,8 +3488,12 @@ Options:::
                     "unknown taylordiagram graphic method: %s" %
                     arglist[4])
             t.plot(arglist[0], canvas=self, template=arglist[2], **keyargs)
-            nm, src = self.check_name_source(None, "default", "display")
-            dn = displayplot.Dp(nm)
+            dname = keyargs.get("display_name")
+            if dname is not None:
+                dn = vcs.elements["display"][dname]
+            else:
+                nm, src = self.check_name_source(None, "default", "display")
+                dn = displayplot.Dp(nm)
             dn.continents = self.getcontinentstype()
             dn.continents_line = self.getcontinentsline()
             dn.template = arglist[2]
@@ -3497,7 +3501,6 @@ Options:::
             dn.g_name = arglist[4]
             dn.array = arglist[:2]
             dn.extradisplays = t.displays
-# dn.array=arglist[0]
             for p in slab_changed_attributes.keys():
                 tmp = slab_changed_attributes[p]
                 if tmp == (None, None):
@@ -3746,9 +3749,13 @@ Options:::
             else:
                 returned_kargs = self.backend.plot(*arglist, **keyargs)
                 if not keyargs.get("donotstoredisplay", False):
-                    nm, src = self.check_name_source(
-                        None, "default", "display")
-                    dn = displayplot.Dp(nm, parent=self)
+                    dname = keyargs.get("display_name")
+                    if dname is not None:
+                        dn = vcs.elements['display'][dname]
+                    else:
+                        nm, src = self.check_name_source(
+                            None, "default", "display")
+                        dn = displayplot.Dp(nm, parent=self)
                     dn.template = arglist[2]
                     dn.g_type = arglist[3]
                     dn.g_name = arglist[4]
@@ -3900,6 +3907,10 @@ Options:::
             self.configurator.stop_animating()
         self.animate_info = []
         self.animate.update_animate_display_list()
+
+        preserve_display = kargs.get("preserve_display", False)
+        if "preserve_display" in kargs:
+            del kargs["preserve_display"]
         self.backend.clear(*args, **kargs)
         for nm in self.display_names:
             # Lets look at elements created by dispaly production
@@ -3914,7 +3925,8 @@ Options:::
                     for k in new_elts[e]:
                         if k in vcs.elements[e].keys():
                             del(vcs.elements[e][k])
-            del(vcs.elements["display"][nm])
+            if not preserve_display:
+                del(vcs.elements["display"][nm])
         self.display_names = []
         return
 
