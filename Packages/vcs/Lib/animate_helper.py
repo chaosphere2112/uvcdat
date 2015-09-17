@@ -211,10 +211,12 @@ class animate_obj_old(object):
                     new_vcs.plot(slab, gm, new_vcs.gettemplate(template), bg=1)
                 new_vcs.png("tmp_anim_%i" % count)
                 count += 1
+            if bitrate is None:
+                bitrate = "5M"
             new_vcs.ffmpeg(
                 save_file,
                 "tmp_anim_%d.png",
-                bitrate=bitrate,
+                quality=bitrate,
                 rate=rate,
                 options=ffmpegoptions)
             for i in range(count - 1):
@@ -1040,7 +1042,7 @@ class AnimationController(animate_obj_old):
         if self.signals is not None:
             self.signals.drawn.emit(self.frame_num)
 
-    def save(self, movie, bitrate=1024, rate=None, options=''):
+    def save(self, movie, quality="medium", rate=None, options=''):
         """Save animation to a file"""
         if self.created():
             while len(self.animation_files) != self.number_of_frames():
@@ -1052,7 +1054,7 @@ class AnimationController(animate_obj_old):
                 os.path.dirname(
                     self.animation_files[0]),
                 "anim_%d.png")
-            self.vcs_self.ffmpeg(movie, files, bitrate, rate, options)
+            self.vcs_self.ffmpeg(movie, files, quality, rate, options)
             self.animation_files = []
 
     def fps(self, value=None):
