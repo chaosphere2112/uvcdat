@@ -1,7 +1,7 @@
 import vcsaddons,vcs
 import numpy
 
-class VCSaddon:
+class VCSaddon(object):
     def __init__(self,name=None,source='default',x=None,template=None):
         self._saves={}
         self.g_nslabs=1
@@ -38,6 +38,7 @@ class VCSaddon:
             self.datawc_x2=1.e20
             self.datawc_y1=1.e20
             self.datawc_y2=1.e20
+            self.colormap="default"
             self.xmtics1='*'
             self.xmtics2='*'
             self.ymtics1='*'
@@ -48,6 +49,8 @@ class VCSaddon:
             self.yticlabels2='*'
             self.xaxisconvert= 'linear'
             self.yaxisconvert= 'linear'
+            self.color_1 = 16
+            self.color_2 = 239
             self.legend = None
             self.projection='linear'
         else:
@@ -58,6 +61,7 @@ class VCSaddon:
             self.datawc_x2=gm.datawc_x2
             self.datawc_y1=gm.datawc_y1
             self.datawc_y2=gm.datawc_x2
+            self.colormap=gm.colormap
             self.xmtics1=gm.xmtics1
             self.xmtics2=gm.xmtics2
             self.ymtics1=gm.ymtics1
@@ -68,6 +72,8 @@ class VCSaddon:
             self.yticlabels2=gm.yticlabels2
             self.xaxisconvert=gm.xaxisconvert
             self.yaxisconvert= gm.yaxisconvert
+            self.color_1 = gm.color_1
+            self.color_2 = gm.color_2
             self.legend = gm.legend
             self.projection=gm.projection
         self.name = name
@@ -139,14 +145,14 @@ class VCSaddon:
             self._saves={}
 
 
-    def getgm(self,name):
+    def getgm(self,source="default"):
         gm = None
         for nm in vcsaddons.gms[self.g_name].keys():
-            if name == nm:
+            if source == nm:
                 return vcsaddons.gms[self.g_name][nm]
 
         if gm is None:
-            raise "Could not find graphic method %s named: %s" % (self.g_type, name)
+            raise "Could not find graphic method %s named: %s" % (self.g_type, source)
 
     def creategm(self,name,source='default'):
         return self.__init__(name,source=source,x=self.x,template=self.template)
